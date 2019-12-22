@@ -68,7 +68,11 @@ const CheckingVibe = ({googleResponse}) => {
         amountOfPeople: googleResponse['responses'][0],
         landmark: googleResponse['responses'][0],
       })
-      console.log("Vision API Response: ", googleResponse['responses'][0])
+      //console.log("Vision API Response: ", googleResponse['responses'][0])
+
+      
+      //Checks first dominant color nd returns the RGB values of it.
+      console.log("color : ", googleResponse['responses'][0]['imagePropertiesAnnotation']['dominantColors']['colors'][0]['color'])
     },[])
 
    return (
@@ -82,7 +86,9 @@ const CheckingVibe = ({googleResponse}) => {
                   Score: {values.vibeScore}
                 </Text>
                 <Text style={{textAlign: 'center', marginTop: 20}}>
-                  Vibe Info: {values.nudity}
+                  Vibe Info:
+                  Nudity: {values.nudity}
+                  Labels: {values.pictureLabels} 
                 </Text>
             </View>
         </View>
