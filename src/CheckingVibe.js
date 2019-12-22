@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { TouchableOpacity, Text, Button, View, ImageBackground, Image  } from 'react-native';
-import {Dimensions } from "react-native";
+import  {Dimensions } from "react-native";
 import { Actions } from 'react-native-router-flux';
 
 import uuid from 'uuid';
@@ -18,116 +18,72 @@ let styles = {
     }
 }
 
-const CheckingVibe = ({uri}) => {
-  
+/*
+What Will be Checked
+- Faces - smiles
+- Logos - it aint ralph doe!
+- Explicit Content filter - titty detection
+- Color palette - dominant colors
+- Time of day
+- Volume? 
+- # of people in the picture/guy to girl ratio
+- Location/Landmark detection - no deductions, only +points for cool places
+
+*/
+
+const CheckingVibe = ({googleResponse}) => {
+
+  //This is the state. it holds all the information of our component that we can change.
+  const [values, setValues] = useState({
+      googleResponse: "",
+      loading: false,
+
+      smiles: 0,
+      logo: '',
+      pictureLabels: [],
+      nudity: '',
+      colorPalette: '',
+      timeOfDay: "",
+      volume: 0,
+      amountOfPeople: 0,
+      landmark: "",
+
+      //Final Vibescore
+      vibeScore: 0
+  })
 
 
-    const [values, setValues] = useState({
-        googleResponse: "",
-        loading: false,
-    })
-
-    const gotoCamera = () => {
-        Actions.camera()
-    }
-
-    async function uploadImageAsync(uri) {
-        const blob = await new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.onload = function() {
-            resolve(xhr.response);
-          };
-          xhr.onerror = function(e) {
-            console.log(e);
-            reject(new TypeError('Network request failed'));
-          };
-          xhr.responseType = 'blob';
-          xhr.open('GET', uri, true);
-          xhr.send(null);
-        });
-      
-        const ref = firebase
-          .storage()
-          .ref()
-          .child(uuid.v4());
-        const snapshot = await ref.put(blob);
-      
-        blob.close();
-      
-        return await snapshot.ref.getDownloadURL();
-      }
-
-    const submitToGoogle = async (uploadUrl) => {
-		try {
-			setValues({ ...values,  uploading: true });
-			let image = uploadUrl;
-			let body = JSON.stringify({
-				requests: [
-					{
-						features: [
-							{ type: 'LABEL_DETECTION', maxResults: 10 },
-							{ type: 'LANDMARK_DETECTION', maxResults: 5 },
-							{ type: 'FACE_DETECTION', maxResults: 5 },
-							{ type: 'LOGO_DETECTION', maxResults: 5 },
-							{ type: 'TEXT_DETECTION', maxResults: 5 },
-							{ type: 'DOCUMENT_TEXT_DETECTION', maxResults: 5 },
-							{ type: 'SAFE_SEARCH_DETECTION', maxResults: 5 },
-							{ type: 'IMAGE_PROPERTIES', maxResults: 5 },
-							{ type: 'CROP_HINTS', maxResults: 5 },
-							{ type: 'WEB_DETECTION', maxResults: 5 }
-						],
-						image: {
-							source: {
-								imageUri: image
-							}
-						}
-					}
-				]
-			});
-			let response = await fetch(
-				'https://vision.googleapis.com/v1/images:annotate?key=' +
-					Environment['GOOGLE_CLOUD_VISION_API_KEY'],
-				{
-					headers: {
-						Accept: 'application/json',
-						'Content-Type': 'application/json'
-					},
-					method: 'POST',
-					body: body
-				}
-      );
-
-			let responseJson = await response.json();
-			console.log(responseJson);
-			setValues({
-                ...values,
-				googleResponse: responseJson,
-				uploading: false
-			});
-		} catch (error) {
-			console.log(error);
-		}
-    };
-
-    const submitting = async () => {
-        const uploadUrl = await uploadImageAsync(uri);
-
-        submitToGoogle(uploadUrl);
-    }
     
-    
+    //The useEffect function is the first thing that runs when this component (file) mounts.
     useEffect(()=>{
-      submitting();
+      //This is how we parse through the response, theres gotta be a better way
+      // Since this is so ugly.... but we can live with it
+      setValues({
+        ...values,
+        nudity: googleResponse['responses'][0]['safeSearchAnnotation']['adult'],
+        pictureLabels: googleResponse['responses'][0]['labelAnnotations'],
+        colorPalette: googleResponse['responses'][0]['imagePropertiesAnnotation']['dominantColors'],
+        timeOfDay: googleResponse['responses'][0],
+        volume: googleResponse['responses'][0],
+        amountOfPeople: googleResponse['responses'][0],
+        landmark: googleResponse['responses'][0],
+      })
+      console.log("Vision API Response: ", googleResponse['responses'][0])
     },[])
 
    return (
     <View>
         <View >
-            <View style={{width: Dimensions.get('window').width, top: Dimensions.get('window').height/2.5, alignItems: 'center'}} >
-                <Progress.Bar progress={0.3} width={200} />
-            </View>
-            <View style = {{position: 'absolute', top: Dimensions.get('window').height/3, margin: 128, backgroundColor: 'white', borderRadius: 5}}>
-                <Button title="Processing Vibe..." onPress={gotoCamera}/>
+            <View>
+                <Text style={{textAlign: 'center', marginTop: 300}}>
+                  Your Vibes: 
+                </Text>
+                <Text style={{textAlign: 'center', marginTop: 20}}>
+                  Score: {values.vibeScore}
+                </Text>
+                <Text style={{textAlign: 'center', marginTop: 20}}>
+                  Vibe Info: {values.nudity}
+                </Text>
             </View>
         </View>
     </View>
