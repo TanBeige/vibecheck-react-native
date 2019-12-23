@@ -3,7 +3,7 @@ import { Router, Scene } from 'react-native-router-flux'
 import CameraPage from './camera.page.js';
 import HomePage from './HomePage.js';
 import ImageDisplay from './ImageDisplay.js';
-import CheckingVibe from './CheckingVibe.js'
+import CheckingVibe from './CheckingVibe/CheckingVibe.js'
 
 const Routes = () => {
 
